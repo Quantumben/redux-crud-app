@@ -1,64 +1,87 @@
 import { useState } from "react";
 
-import { useAppDispatch } from "../app/hooks";
-import { addPost } from "../features/posts/postsSlice";
+import type { Post } from "../types/post";
 
-function PostForm() {
+import { useAppDispatch } from "../app/hooks";
+
+import { deletePost, updatePost } from "../features/posts/postsSlice";
+
+interface PostCardProps {
+  post: Post;
+}
+
+function PostCard({ post }: PostCardProps) {
   const dispatch = useAppDispatch();
 
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const [title, setTitle] = useState(post.title);
+  const [body, setBody] = useState(post.body);
 
-    if (!title.trim() || !body.trim()) {
-      return;
-    }
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
+  const handleUpdate = async () => {
     try {
-      setIsSubmitting(true);
+      setIsSaving(true);
 
-      await dispatch(addPost({ userId: 1, title, body })).unwrap();
+      await dispatch(updatePost({ ...post, title, body })).unwrap();
 
-      setTitle("");
-      setBody("");
+      setIsEditing(false);
     } catch (error) {
-      console.error("Could not create post:", error);
+      console.error("Update failed:", error);
     } finally {
-      setIsSubmitting(false);
+      setIsSaving(false);
     }
   };
 
-  return (
-    <form onSubmit={handleSubmit}>
-      <h2>Create Post</h2>
+  const handleDelete = async () => {
+    try {
+      setIsDeleting(true);
 
-      <div>
-        <label>Title</label>
+      await dispatch(deletePost(post.id)).unwrap();
+    } catch (error) {
+      console.error("Delete failed:", error);
 
+      setIsDeleting(false);
+    }
+  };
+
+  if (isEditing) {
+    return (
+      <article>
         <input
-          type="text"
           value={title}
           onChange={(event) => setTitle(event.target.value)}
         />
-      </div>
-
-      <div>
-        <label>Body</label>
 
         <textarea
           value={body}
           onChange={(event) => setBody(event.target.value)}
         />
-      </div>
 
-      <button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Creating..." : "Create Post"}
+        <button onClick={handleUpdate} disabled={isSaving}>
+          {isSaving ? "Saving..." : "Save"}
+        </button>
+
+        <button onClick={() => setIsEditing(false)}>Cancel</button>
+      </article>
+    );
+  }
+
+  return (
+    <article>
+      <h3>{post.title}</h3>
+
+      <p>{post.body}</p>
+
+      <button onClick={() => setIsEditing(true)}>Edit</button>
+
+      <button onClick={handleDelete} disabled={isDeleting}>
+        {isDeleting ? "Deleting..." : "Delete"}
       </button>
-    </form>
+    </article>
   );
 }
 
-export default PostForm;
+export default PostCard;
