@@ -7,6 +7,9 @@ export const store = configureStore({
     },
 });
 
-export type RootState = ReturnType<typeof store.getState>;
+export type RootState = ReturnType<typeof store.getState>; //TypeScript, look at my store and automatically figure out what my entire Redux state looks like.
 
-export type AppDispatch = typeof store.dispatch;
+export type AppDispatch = typeof store.dispatch; //TypeScript, determine what type my Redux dispatch function should have.
+
+// configureStore handles combining slice reducers
+// and configures thunk middleware and Redux DevTools support automatically.
